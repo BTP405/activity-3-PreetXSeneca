@@ -1,9 +1,8 @@
-# waits for client to send message to recieve the message.
 import socket
 import pickle
 import threading
 
-
+# will allow to send message 
 def send_message(client):
     print("\nNow, Enter the message to send (Q = Exit Chat)\n")
     try:
@@ -17,6 +16,7 @@ def send_message(client):
     except Exception as e:
         print("An error occurred while sending a message!", e)
 
+# will allow to receive message 
 def receive_message(client):
     try:
         while True:
@@ -35,19 +35,19 @@ def receive_message(client):
     except Exception as e:
         print("An error occurred while receiving a message!", e)
         
-client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+if __name__ == "__main__":
+    client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    client.connect(('127.0.0.1', 5500))
+    name = input("\nEnter your username to start chat: ")
+    # Create and start the sending and receiving threads
+    receive_thread = threading.Thread(target=receive_message,args=(client,))
+    send_thread = threading.Thread(target=send_message,args=(client,))
 
-client.connect(('127.0.0.1', 5500))
-name = input("\nEnter your username to start chat: ")
-# Create and start the sending and receiving threads
-receive_thread = threading.Thread(target=receive_message,args=(client,))
-send_thread = threading.Thread(target=send_message,args=(client,))
+    send_thread.start()
+    receive_thread.start()
 
-send_thread.start()
-receive_thread.start()
+    # Wait for both threads to finish (they won't in this case, unless an error occurs)
+    send_thread.join()
+    receive_thread.join()
 
-# Wait for both threads to finish (they won't in this case, unless an error occurs)
-send_thread.join()
-receive_thread.join()
-
-client.close()
+    client.close()
