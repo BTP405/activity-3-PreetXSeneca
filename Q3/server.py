@@ -55,6 +55,5 @@ def main():
         client_thread = threading.Thread(target=handle_client_chat, args=(client_socket, client_address))
         client_thread.start()
     
-    
-        
-main()
+if __name__ == "__main__":   
+    main()
