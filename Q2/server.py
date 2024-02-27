@@ -1,42 +1,28 @@
-
 import socket
-import dill
-import threading
+from task import *
 
+# creating server socket
+def main(address, port):
+    server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    server_address = (address, port) 
+    server_socket.bind(server_address)
+    server_socket.listen(1)
+    print('\nServer is listening...')
 
-# Define the task class
-class Task:
-    def __init__(self, func, args):
-        self.func = func
-        self.args = args
-
-    def execute(self):
-        return self.func(*self.args)
-
-# Worker function to handle incoming tasks
-def handle_task(client_socket):
-    try:
-        data = client_socket.recv(4096)
-        task = dill.loads(data)
-        result = task.execute()
-        client_socket.sendall(dill.dumps(result))
-    except Exception as e:
-        print(f"Error processing task: {e}")
-    finally:
-        client_socket.close()
-
-
-# Worker node function
-def worker(host, port):
-    worker_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    worker_socket.bind((host, port))
-    worker_socket.listen(5)
-    print(f"Worker node listening on {host}:{port}")
-
-    while True:
-        client_socket, _ = worker_socket.accept()
-        threading.Thread(target=handle_task, args=(client_socket,)).start()
-        # handle_task(client_socket)
+    while True: 
+        client_socket, client_address = server_socket.accept(); 
+        try: 
+            print('Connection Established with: ', client_address)
+            # handeling multiple tasks
+            while True: 
+                task_data = client_socket.recv(1024)
+                if not task_data: 
+                    break
+                task_worker(task_data, client_socket)
+        except Exception as e:
+            print("Error occurred in server: ", e)   
+        finally:
+            client_socket.close()    
 
 if __name__ == "__main__":
-    worker("localhost", 5000)
+    main("localhost", 5000)

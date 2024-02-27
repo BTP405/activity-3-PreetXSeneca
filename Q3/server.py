@@ -6,9 +6,11 @@ clients = []
 messages ={}
 
 def handle_client_chat(client_socket, client_address):
-    while True:
-        try:
+    try:
+        while True:
             message = pickle.loads(client_socket.recv(8192))
+            if message == 'Q':
+                break
             # split will give us a list of words
             name = message['name']
             data = message['msg']
@@ -23,12 +25,15 @@ def handle_client_chat(client_socket, client_address):
             for client in clients:
                 if client != client_socket:
                     client.sendall(pickle.dumps(messages))
-        except Exception as e:
-            print(e)
-            # location = clients.index(client_socket)
+    except Exception as e:
+        print(e)
+        # location = clients.index(client_socket)
+        clients.remove(client_socket)
+        client_socket.close()
+    finally:
+        if client_socket in clients:
             clients.remove(client_socket)
-            client_socket.close()
-            break
+        client_socket.close()
 
 def main():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -49,6 +54,7 @@ def main():
 
         client_thread = threading.Thread(target=handle_client_chat, args=(client_socket, client_address))
         client_thread.start()
-  
+    
+    
         
 main()

@@ -1,24 +1,23 @@
-
 import socket
-import dill
-# Define the task class
-class Task:
-    def __init__(self, func, args):
-        self.func = func
-        self.args = args
+import dill # extention of the pickle library (used for serializing and deserializing functions)
+from task import Task
 
 # Client function to send tasks to available worker nodes
-def send_task(host, port, task):
+def send_task(host, port, tasks):
     try:
+        result =[]
         client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         client_socket.connect((host, port))
-        client_socket.send(dill.dumps(task))
-        result = dill.loads(client_socket.recv(4096))
-        client_socket.close()
+
+        for task in tasks:
+            client_socket.send(dill.dumps(task))
+            result.append(dill.loads(client_socket.recv(4096)))
         return result
     except Exception as e:
-        print(f"Error communicating with worker node: {e}")
+        print("Error occured while sending the task: ",e)
         return None
+    finally:
+        client_socket.close()
 
 if __name__ == "__main__":
     # Example task
@@ -26,16 +25,13 @@ if __name__ == "__main__":
         return x + y
     
     def scale(x, y ):
-       
         cal = []
         for i in range(0, x*y):
             cal.append(x*i)
         return cal
 
-
-    task1 = Task(scale, (4, 10))
+    task1 = Task(scale, (4, 5))
     task2 = Task(add, (34, 100))
-    result1 = send_task("localhost", 5000, task1)
-    result2 = send_task("localhost", 5000, task2)
-    print("\n\nscale:", result1)
-    print("\n\nadd:", result2)
+    result = send_task("localhost", 5000, [task2,task1])
+    print("Results: ", result)
+
